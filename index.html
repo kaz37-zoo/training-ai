@@ -228,6 +228,27 @@ button:active{transform:scale(.975);opacity:.82}
 .schedule-note{margin-top:10px;padding:12px 14px;border-radius:13px;background:var(--surface);font-size:13px;color:var(--sub)}
 
 .readiness-block{padding:16px;border-bottom:1px solid var(--line)}.readiness-block:last-child{border-bottom:0}.readiness-title{font-size:15px;font-weight:800;margin-bottom:12px}.choice-scale{display:grid;gap:8px}.choice-scale.five{grid-template-columns:repeat(5,1fr)}.choice-scale.four{grid-template-columns:repeat(4,1fr)}.choice-scale button{min-width:0;height:44px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font-size:16px;font-weight:800;color:var(--text)}.choice-scale button.on{background:var(--accent);border-color:var(--accent);color:#fff}.choice-scale button.level-2.on{background:var(--warning);border-color:var(--warning);color:#332100}.choice-scale button.level-3.on{background:var(--danger);border-color:var(--danger);color:#fff}.scale-labels{display:flex;justify-content:space-between;margin-top:6px;color:var(--sub);font-size:11px}.soreness-row{margin-top:12px}.soreness-row:first-child{margin-top:0}.soreness-row .soreness-name{font-size:13px;font-weight:700;margin-bottom:6px}.soreness-row .choice-scale button{height:38px;font-size:13px}.sleep-stepper{display:grid;grid-template-columns:56px 1fr 56px;align-items:center;gap:10px}.sleep-stepper button{height:48px;border:0;border-radius:13px;background:var(--surface2);font-size:28px;color:var(--accent)}.sleep-stepper b{text-align:center;font-size:20px}.circuit-card textarea{display:none!important}
+
+/* v1.1.2 circuit and analytics refinements */
+.circuit-card .stop-box{margin-bottom:14px}
+.circuit-card .circuit-finish{
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ width:132px;
+ min-width:132px;
+ height:48px;
+ margin:0;
+ position:relative;
+ z-index:0;
+}
+.circuit-record-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0 16px 18px}
+.circuit-record-card{padding:15px;border-radius:17px;background:var(--surface);border:1px solid var(--line)}
+.circuit-record-card small{display:block;color:var(--sub);font-weight:700}
+.circuit-record-card b{display:block;font-size:23px;margin-top:5px}
+.circuit-record-card p{margin:6px 0 0;color:var(--sub);font-size:12px;line-height:1.45}
+@media(max-width:390px){.circuit-record-grid{grid-template-columns:1fr 1fr}}
+
 </style></head><body><header class="app-header" id="appHeader"><div class="navline"><button class="nav-action left" id="headerLeft"></button><div class="nav-center" id="compactTitle">今日</div><div><span class="save-state" id="saveState">保存済み</span><span class="offline" id="offlineState">オフライン</span></div></div><div class="large-title" id="largeTitle">今日</div><div class="large-subtitle" id="largeSubtitle"></div></header><main id="main"><section id="todayPage" class="page active"><div class="progress-hero"><div class="progress-head"><div><h2>今日の進捗</h2><div class="large-subtitle" id="progressDetail"></div></div><strong id="progressPercent">0%</strong></div><div class="progress-track"><i id="progressBar"></i></div><div class="progress-meta"><span id="upperMeta">上半身 0/0</span><span id="absMeta">腹筋 ―</span><span id="lowerMeta">下半身 ―</span></div><div class="next-card" id="nextCard"><small>次の種目</small><b id="nextExercise">―</b></div></div><div class="section-label">今日のコンディション</div><div class="group" id="readinessCard">
 <div class="readiness-block"><div class="readiness-title">疲労度</div><div class="choice-scale five" id="fatigueInput"></div><div class="scale-labels"><span>良好</span><span>普通</span><span>強い</span></div></div>
 <div class="readiness-block"><div class="readiness-title">筋肉痛（部位別）</div><div id="sorenessInput"></div></div>
@@ -1100,7 +1121,7 @@ const _v10RenderToday=renderToday;
 renderToday=function(){_v10RenderToday();const normal=applicableExercises().filter(ex=>NORMAL_EXERCISE_IDS.has(ex.id));for(const ex of normal){const root=document.getElementById('ex-'+ex.id);root?.classList.toggle('done',assessmentComplete(ex));root?.classList.toggle('assessment-pending',exerciseDone(ex)&&!assessmentComplete(ex))}updateTodaySummaryOnly();let celebration=document.getElementById('todayCelebration');if(session.finished&&!celebration){celebration=document.createElement('div');celebration.id='todayCelebration';celebration.className='finish-celebration';celebration.innerHTML=`<h3>お疲れ様でした</h3><p>${session.newPRs?.length?`${session.newPRs.join('・')}で記録を更新しました。`:'今日のトレーニングを完了しました。'}</p>${session.newPRs?.length?'<span class="pr-badge">NEW RECORD</span>':''}`;document.getElementById('finishButton')?.before(celebration)}const noteId='scheduleNote';let note=document.getElementById(noteId);if(!note){note=document.createElement('div');note.id=noteId;note.className='schedule-note';document.querySelector('.progress-hero')?.after(note)}const prev=[...(state.scheduleHistory||[])].filter(x=>x.status==='skipped').sort((a,b)=>b.plannedDate.localeCompare(a.plannedDate))[0];note.textContent=prev?`実施予定と実施履歴を分けて管理中。直近のスキップ予定：${fmtDate(prev.plannedDate)}`:'実施予定と実施履歴を分けて管理します。未実施予定は、次の予定を完了した時点でスキップとして確定します。'};
 
 
-// v1.1.1 condition, muscle-group, circuit and diagnostics refinements
+// v1.1.2 condition, muscle-group, circuit and diagnostics refinements
 const CONDITION_PARTS=['胸','背中','肩','腕','下半身','腹部'];
 function normalizedReadiness(r){
  r=r||{};const old=Number(r.soreness)||0;
@@ -1121,9 +1142,148 @@ function coachAdvice(){const r=normalizedReadiness(session.readiness),signals=[]
 const _v111RenderToday=renderToday;
 renderToday=function(){_v111RenderToday();document.getElementById('scheduleNote')?.remove();syncReadinessInputs();refreshCoachCards()}
 renderMenuCircuit=function(key){const d=state.menuConfigs[key],items=exercisesForMenu(key),c=session.circuits[key];return `<div class="circuit-card" id="circuit-${key}"><div class="circuit-head"><div><h3>${esc(d.name)}</h3><p>${items.length}種目・${esc(d.description||'最後まで実施')}</p></div></div><div class="stop-box"><span>停止回数</span><div class="stepper"><button onclick="changeStops('${key}',-1)">−</button><b data-circuit-stops>${c.stops||0}</b><button onclick="changeStops('${key}',1)">＋</button></div></div><button class="primary-pill circuit-finish ${c.completed?'on':''}" data-circuit-complete onclick="toggleCircuit('${key}')">${c.completed?'✓ 完走':'完走'}</button></div>`}
-function circuitWeekStats(){const out={abs:{done:0,stops:0},lowerCircuit:{done:0,stops:0}};for(const s of weekSessions())for(const k of Object.keys(out)){const c=s.circuits?.[k];if(c?.completed)out[k].done++;out[k].stops+=Number(c?.stops)||0}return out}
-const _v111RenderAnalytics=renderAnalytics;
-renderAnalytics=function(){_v111RenderAnalytics();const panel=document.querySelector('[data-panel="weekly"]');if(panel){panel.querySelectorAll('.metric-card').forEach(card=>{const t=card.querySelector('small')?.textContent;if(t==='腹筋'||t==='脚'||t==='臀部')card.remove()});const stats=weeklyStats();let lower=panel.querySelector('[data-lower-summary]');if(!lower){const grid=panel.querySelector('.analytics-grid');lower=document.createElement('div');lower.className='metric-card';lower.dataset.lowerSummary='1';grid?.append(lower)}lower.innerHTML=`<small>下半身</small><b>${stats.sets['下半身']||0}セット</b><div class="meter"><i style="width:${Math.min(100,(stats.sets['下半身']||0)/10*100)}%"></i></div>`;const c=circuitWeekStats(),section=document.createElement('div');section.innerHTML=`<div class="section-label">サーキット記録</div><div class="analytics-grid"><div class="metric-card"><small>腹筋サーキット</small><b>${c.abs.done}回完走</b><p>停止 ${c.abs.stops}回</p></div><div class="metric-card"><small>下半身サーキット</small><b>${c.lowerCircuit.done}回完走</b><p>停止 ${c.lowerCircuit.stops}回</p></div></div>`;panel.append(...section.childNodes)}setAnalyticsSection(analyticsSection)}
-async function runDiagnostics(showResult=false){const checks=[],add=(name,ok)=>checks.push({name,ok:!!ok});add('localStorage書き込み',(()=>{try{localStorage.setItem('__tltest','1');localStorage.removeItem('__tltest');return true}catch{return false}})());add('メニュー設定',!!state.menuConfigs&&['upper','abs','lower','lowerCircuit'].every(k=>state.menuConfigs[k]));add('種目ID重複なし',new Set(state.exercises.map(e=>e.id)).size===state.exercises.length);add('日付形式',state.sessions.every(s=>/^\d{4}-\d{2}-\d{2}$/.test(s.date)));add('セッション日付重複なし',new Set(state.sessions.map(s=>s.date)).size===state.sessions.length);add('サービスワーカー','serviceWorker'in navigator);let cacheOK=false;try{if('caches'in window){const keys=await caches.keys();const cache=await caches.open('training-ai-v1.1.1');const hit=await cache.match('./index.html')||await cache.match(new URL('./index.html',location.href).href);cacheOK=keys.includes('training-ai-v1.1.1')&&!!hit}}catch{}add('オフラインキャッシュ',cacheOK);add('Wake Lock','wakeLock'in navigator);add('アクセシビリティライブ領域',!!document.getElementById('a11yLive'));add('データ容量5MB未満',new Blob([JSON.stringify(state)]).size<5*1024*1024);const passed=checks.filter(x=>x.ok).length,el=document.getElementById('diagnosticValue');if(el){el.textContent=`${passed}/${checks.length}項目正常`;el.className=passed===checks.length?'diagnostic-pass':'diagnostic-warn'}if(showResult)alert(checks.map(x=>`${x.ok?'✓':'△'} ${x.name}`).join('\n')+`\n\n${passed}/${checks.length}項目正常`);return checks}
+
+function circuitWeekStats(){
+ const out={abs:{done:0},lowerCircuit:{done:0}};
+ for(const s of weekSessions())for(const k of Object.keys(out)){
+  if(s.circuits?.[k]?.completed)out[k].done++;
+ }
+ return out
+}
+function circuitLifetimeStats(key){
+ const rows=[...state.sessions]
+  .filter(s=>s.circuits?.[key]&&(s.circuits[key].completed||Number(s.circuits[key].stops)>0))
+  .sort((a,b)=>a.date.localeCompare(b.date));
+ const completed=rows.filter(s=>s.circuits[key].completed);
+ const totalAttempts=rows.length;
+ const zeroStop=completed.filter(s=>(Number(s.circuits[key].stops)||0)===0).length;
+ const totalStops=completed.reduce((sum,s)=>sum+(Number(s.circuits[key].stops)||0),0);
+ const avgStops=completed.length?totalStops/completed.length:0;
+ let bestStreak=0,current=0;
+ for(const s of rows){
+  if(s.circuits[key].completed){current++;bestStreak=Math.max(bestStreak,current)}
+  else current=0;
+ }
+ let currentStreak=0;
+ for(let i=rows.length-1;i>=0;i--){
+  if(rows[i].circuits[key].completed)currentStreak++;
+  else break;
+ }
+ return{
+  completed:completed.length,
+  totalAttempts,
+  completionRate:totalAttempts?Math.round(completed.length/totalAttempts*100):0,
+  zeroStop,
+  avgStops,
+  bestStreak,
+  currentStreak
+ }
+}
+const _v112BaseRenderAnalytics=renderAnalytics;
+renderAnalytics=function(){
+ _v112BaseRenderAnalytics();
+
+ const weekly=document.querySelector('[data-panel="weekly"]');
+ if(weekly){
+  weekly.querySelectorAll('.metric-card').forEach(card=>{
+   const t=card.querySelector('small')?.textContent;
+   if(t==='腹筋'||t==='脚'||t==='臀部')card.remove();
+  });
+  const stats=weeklyStats();
+  let lower=weekly.querySelector('[data-lower-summary]');
+  if(!lower){
+   const grid=weekly.querySelector('.analytics-grid');
+   lower=document.createElement('div');
+   lower.className='metric-card';
+   lower.dataset.lowerSummary='1';
+   grid?.append(lower);
+  }
+  lower.innerHTML=`<small>下半身</small><b>${stats.sets['下半身']||0}セット</b><div class="meter"><i style="width:${Math.min(100,(stats.sets['下半身']||0)/10*100)}%"></i></div>`;
+
+  weekly.querySelector('[data-circuit-week-section]')?.remove();
+  const c=circuitWeekStats(),section=document.createElement('div');
+  section.dataset.circuitWeekSection='1';
+  section.innerHTML=`<div class="section-label">サーキット完走回数</div><div class="analytics-grid"><div class="metric-card"><small>腹筋サーキット</small><b>${c.abs.done}回</b></div><div class="metric-card"><small>下半身サーキット</small><b>${c.lowerCircuit.done}回</b></div></div>`;
+  weekly.append(...section.childNodes);
+ }
+
+ const records=document.querySelector('[data-panel="records"]');
+ if(records){
+  records.querySelector('[data-circuit-record-section]')?.remove();
+  const abs=circuitLifetimeStats('abs'),lower=circuitLifetimeStats('lowerCircuit');
+  const section=document.createElement('div');
+  section.dataset.circuitRecordSection='1';
+  section.innerHTML=`
+   <div class="section-label">サーキット記録</div>
+   <div class="analytics-list">
+    ${circuitRecordBlock('腹筋サーキット',abs)}
+    ${circuitRecordBlock('下半身サーキット',lower)}
+   </div>`;
+  records.append(...section.childNodes);
+ }
+ setAnalyticsSection(analyticsSection);
+}
+function circuitRecordBlock(name,s){
+ return `<div class="insight-card"><h4>${esc(name)}</h4><div class="circuit-record-grid">
+  <div class="circuit-record-card"><small>通算完走</small><b>${s.completed}回</b><p>完走できた回数</p></div>
+  <div class="circuit-record-card"><small>完走率</small><b>${s.completionRate}%</b><p>${s.completed}/${s.totalAttempts||0}回</p></div>
+  <div class="circuit-record-card"><small>停止なし完走</small><b>${s.zeroStop}回</b><p>一度も止まらず完走</p></div>
+  <div class="circuit-record-card"><small>平均停止回数</small><b>${s.completed?s.avgStops.toFixed(1):'―'}</b><p>完走1回あたり</p></div>
+  <div class="circuit-record-card"><small>現在の連続完走</small><b>${s.currentStreak}回</b><p>直近の連続記録</p></div>
+  <div class="circuit-record-card"><small>最長連続完走</small><b>${s.bestStreak}回</b><p>過去最高の連続記録</p></div>
+ </div></div>`
+}
+async function ensureOfflineShellCached(){
+ if(!('caches'in window))return false;
+ const cache=await caches.open('training-ai-v1.1.2');
+ const pageURL=new URL(location.pathname,location.origin).href;
+ const indexURL=new URL('./index.html',location.href).href;
+ const manifestURL=new URL('./manifest.webmanifest',location.href).href;
+ let pageHit=await cache.match(pageURL)||await cache.match(indexURL);
+ if(!pageHit&&navigator.onLine){
+  try{
+   const response=await fetch(location.href,{cache:'reload'});
+   if(response.ok){
+    await cache.put(pageURL,response.clone());
+    await cache.put(indexURL,response.clone());
+    pageHit=response;
+   }
+  }catch{}
+ }
+ try{
+  if(!(await cache.match(manifestURL))&&navigator.onLine){
+   const manifest=await fetch(manifestURL,{cache:'reload'});
+   if(manifest.ok)await cache.put(manifestURL,manifest.clone());
+  }
+ }catch{}
+ return !!(await cache.match(pageURL)||await cache.match(indexURL));
+}
+async function runDiagnostics(showResult=false){
+ const checks=[],add=(name,ok)=>checks.push({name,ok:!!ok});
+ add('localStorage書き込み',(()=>{try{localStorage.setItem('__tltest','1');localStorage.removeItem('__tltest');return true}catch{return false}})());
+ add('メニュー設定',!!state.menuConfigs&&['upper','abs','lower','lowerCircuit'].every(k=>state.menuConfigs[k]));
+ add('種目ID重複なし',new Set(state.exercises.map(e=>e.id)).size===state.exercises.length);
+ add('日付形式',state.sessions.every(s=>/^\d{4}-\d{2}-\d{2}$/.test(s.date)));
+ add('セッション日付重複なし',new Set(state.sessions.map(s=>s.date)).size===state.sessions.length);
+ let swOK=false;
+ try{
+  if('serviceWorker'in navigator){
+   const reg=await navigator.serviceWorker.getRegistration();
+   swOK=!!reg;
+  }
+ }catch{}
+ add('サービスワーカー',swOK);
+ let cacheOK=false;
+ try{cacheOK=await ensureOfflineShellCached()}catch{}
+ add('オフラインキャッシュ',cacheOK);
+ add('Wake Lock','wakeLock'in navigator);
+ add('アクセシビリティライブ領域',!!document.getElementById('a11yLive'));
+ add('データ容量5MB未満',new Blob([JSON.stringify(state)]).size<5*1024*1024);
+ const passed=checks.filter(x=>x.ok).length,el=document.getElementById('diagnosticValue');
+ if(el){el.textContent=`${passed}/${checks.length}項目正常`;el.className=passed===checks.length?'diagnostic-pass':'diagnostic-warn'}
+ if(showResult)alert(checks.map(x=>`${x.ok?'✓':'△'} ${x.name}`).join('\n')+`\n\n${passed}/${checks.length}項目正常`);
+ return checks
+}
+
 migrateV11();lastSavedPayload=JSON.stringify(state);applyTheme();updateOnlineState();render();setTimeout(()=>runDiagnostics(false),600);
 </script></body></html>
